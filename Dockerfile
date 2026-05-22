@@ -1,5 +1,5 @@
 # 1. Use the official PHP 8.2 image packaged with the Apache web server
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # 2. Install essential system utilities needed for downloading packages
 RUN apt-get update && apt-get install -y \
