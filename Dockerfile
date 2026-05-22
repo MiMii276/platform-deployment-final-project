@@ -16,11 +16,8 @@ ENV APACHE_DOCUMENT_ROOT /app/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# 5. Force-purge prefork module configurations & enable event MPM + rewrite engine
-RUN rm -f /etc/apache2/mods-enabled/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.conf && \
-    a2dismod -f mpm_prefork && \
-    a2enmod mpm_event && \
-    a2enmod rewrite
+# 5. Enable Apache's mod_rewrite module so pretty URLs work seamlessly
+RUN a2enmod rewrite
 
 # 6. Change Apache's port from 80 to 8000 to line up with our container port mapping
 RUN sed -i 's/Listen 80/Listen 8000/g' /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf
