@@ -1,4 +1,4 @@
-# 1. Use the official PHP 8.2 image packaged with the Apache web server
+# 1. Use the official PHP 8.3 image packaged with the Apache web server
 FROM php:8.3-apache
 
 # 2. Install essential system utilities needed for downloading packages
@@ -30,12 +30,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # 8. Copy all files from your computer's local directory into the container's /app directory
 COPY . /app
 
-# 9. Install Symfony dependencies for production
+# 9. Force production mode environment variables for the build stage
+ENV APP_ENV=prod
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# 10. Grant file permission ownership to Apache's default execution user (www-data)
+# 10. Install Symfony dependencies for production safely
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+
+# 11. Grant file permission ownership to Apache's default execution user (www-data)
 RUN chown -R www-data:www-data /app
 
-# 11. Document that this container will broadcast traffic out of port 8000
+# 12. Document that this container will broadcast traffic out of port 8000
 EXPOSE 8000
