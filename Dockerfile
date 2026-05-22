@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql zip # Install PHP database extensions
+    && docker-php-ext-install pdo_mysql zip
 
 # 3. Set the working directory inside the container to match our project space
 WORKDIR /app
@@ -19,8 +19,8 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.
 # 5. Enable Apache's mod_rewrite module so pretty URLs (e.g., /home, /login) work
 RUN a2enmod rewrite
 
-# 6. Change Apache's port from 80 to 8000 to line up with our container port mapping
-RUN sed -i 's/Listen 80/Listen 8000/g' /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf
+# 6. Explicitly ensure directory permissions are granted to Apache for Symfony's public directory
+RUN echo "<Directory /app/public>\n\tOptions Indexes FollowSymLinks\n\tAllowOverride All\n\tRequire all granted\n</Directory>" >> /etc/apache2/apache2.conf
 
 # 7. Download the official Composer package manager directly into our build stage
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -28,8 +28,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # 8. Copy all files from your computer's local directory into the container's /app directory
 COPY . /app
 
-# 9. Grant file permission ownership to Apache's default execution user (www-data)
+# 9. Run composer install to compile Symfony dependencies for production
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# 10. Grant file permission ownership to Apache's default execution user (www-data)
 RUN chown -R www-data:www-data /app
 
-# 10. Document that this container will broadcast traffic out of port 8000
-EXPOSE 8000
+# 11. Document that this container will broadcast traffic out of port 80
+EXPOSE 80
