@@ -11,8 +11,10 @@ RUN apt-get update && apt-get install -y \
 # 3. Set the working directory inside the container to match our project space
 WORKDIR /app
 
-# 4. Fix the MPM conflict immediately before altering any configuration files
-RUN a2dismod mpm_prefork && a2enmod mpm_event
+# 4. Fix MPM conflict: Disable prefork and switch to event
+#    Note: Must disable prefork FIRST, then enable event
+RUN a2dismod mpm_prefork && \
+    a2enmod mpm_event
 
 # 5. Change Apache's default path (/var/www/html) to look at Symfony's /app/public folder
 ENV APACHE_DOCUMENT_ROOT /app/public
