@@ -11,16 +11,16 @@ RUN apt-get update && apt-get install -y \
 # 3. Set the working directory inside the container to match our project space
 WORKDIR /app
 
-# 4. Change Apache's default path (/var/www/html) to look at Symfony's /app/public folder
+# 4. Fix the MPM conflict immediately before altering any configuration files
+RUN a2dismod mpm_prefork && a2enmod mpm_event
+
+# 5. Change Apache's default path (/var/www/html) to look at Symfony's /app/public folder
 ENV APACHE_DOCUMENT_ROOT /app/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# 5. Enable Apache's mod_rewrite module so pretty URLs work seamlessly
+# 6. Enable Apache's mod_rewrite module so pretty URLs work seamlessly
 RUN a2enmod rewrite
-
-# 6. Change Apache's port from 80 to 8000 to line up with our container port mapping
-RUN sed -i 's/Listen 80/Listen 8000/g' /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf
 
 # 7. Download the official Composer package manager directly into our build stage
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -38,5 +38,5 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-pl
 # 11. Grant file permission ownership to Apache's default execution user (www-data)
 RUN chown -R www-data:www-data /app
 
-# 12. Document that this container will broadcast traffic out of port 8000
-EXPOSE 8000
+# 12. Expose standard web port 80 for Render's automatic routing
+EXPOSE 80
