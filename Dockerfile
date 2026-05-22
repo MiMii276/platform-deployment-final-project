@@ -16,8 +16,9 @@ ENV APACHE_DOCUMENT_ROOT /app/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# 5. Fix MPM conflict permanently & enable rewrite engine
-RUN a2dismod mpm_prefork && \
+# 5. Force-purge prefork module configurations & enable event MPM + rewrite engine
+RUN rm -f /etc/apache2/mods-enabled/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.conf && \
+    a2dismod -f mpm_prefork && \
     a2enmod mpm_event && \
     a2enmod rewrite
 
